@@ -22,6 +22,10 @@ export interface TimeSlot {
   end_time: string;
   booked_by: string[];  // List of User IDs
   capacity: number;  // Maximum number of seats
+  status?: string;  // "active", "cancelled", "rescheduled"
+  original_date?: string;  // Original date if rescheduled
+  original_start_time?: string;  // Original start time if rescheduled
+  original_end_time?: string;  // Original end time if rescheduled
 }
 
 export interface TimeSlotCreate {
@@ -119,6 +123,36 @@ export class DataServiceService {
 
   deleteTimeslot(timeslotId: string): Observable<any> {
     return this.http.delete(`${this.apiUrl}/timeslots/${timeslotId}`, {
+      headers: this.getHeaders()
+    });
+  }
+
+  cancelTimeslot(timeslotId: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/timeslots/${timeslotId}/cancel`, {}, {
+      headers: this.getHeaders()
+    });
+  }
+
+  rescheduleTimeslot(timeslotId: string, date: string, startTime: string, endTime: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/timeslots/${timeslotId}/reschedule`, {
+      date,
+      start_time: startTime,
+      end_time: endTime
+    }, {
+      headers: this.getHeaders()
+    });
+  }
+
+  // Notifications
+  getNotifications(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/notifications`, {
+      headers: this.getHeaders()
+    });
+  }
+
+  // Admin - Create sample events
+  createSampleEvents(): Observable<any> {
+    return this.http.post(`${this.apiUrl}/admin/create-sample-events`, {}, {
       headers: this.getHeaders()
     });
   }

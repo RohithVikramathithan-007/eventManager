@@ -13,6 +13,21 @@
     <mat-icon>admin_panel_settings</mat-icon>
     Admin
   </button>
+  
+  <!-- Notifications -->
+  <div class="notifications-container" [matTooltip]="getNotificationTooltip()">
+    <button mat-icon-button class="notification-button">
+      <mat-icon [class.has-notifications]="hasNotifications()">notifications</mat-icon>
+      <span class="notification-badge" *ngIf="notificationCount > 0">{{ notificationCount }}</span>
+    </button>
+    <div class="notification-messages" *ngIf="hasNotifications()">
+      <div *ngFor="let notification of notifications" class="notification-item" [class.cancelled]="notification.type === 'cancelled'" [class.rescheduled]="notification.type === 'rescheduled'">
+        <mat-icon>{{ notification.type === 'cancelled' ? 'cancel' : 'event_repeat' }}</mat-icon>
+        <span>{{ notification.message }}</span>
+      </div>
+    </div>
+  </div>
+  
   <div class="user-info">
     <span class="username">{{ getUsername() }}</span>
     <button mat-icon-button (click)="logout()" matTooltip="Logout">

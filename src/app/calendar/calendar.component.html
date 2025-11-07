@@ -39,27 +39,64 @@
           <div class="timeslots-container">
             <div *ngFor="let timeslot of day.timeslots" class="timeslot-card" 
                  [class.ended]="isEventEnded(timeslot)"
-                 [class.full]="isFull(timeslot) && !isEventEnded(timeslot)"
-                 [class.booked-by-user]="isBookedByUser(timeslot)">
+                 [class.full]="isFull(timeslot) && !isEventEnded(timeslot) && !isCancelled(timeslot)"
+                 [class.booked-by-user]="isBookedByUser(timeslot)"
+                 [class.cancelled]="isCancelled(timeslot)"
+                 [class.rescheduled]="isRescheduled(timeslot)">
               <div class="timeslot-header">
                 <span class="category-chip">{{ timeslot.category }}</span>
+                <span *ngIf="isCancelled(timeslot)" class="status-badge cancelled-badge">
+                  <mat-icon>cancel</mat-icon>
+                  Cancelled
+                </span>
+                <span *ngIf="isRescheduled(timeslot)" class="status-badge rescheduled-badge">
+                  <mat-icon>event_repeat</mat-icon>
+                  Rescheduled
+                </span>
               </div>
+              
+              <!-- Event Description with Status -->
+              <div class="event-description" *ngIf="isCancelled(timeslot) || isRescheduled(timeslot)">
+                <div *ngIf="isCancelled(timeslot)" class="status-message cancelled-message">
+                  <mat-icon>info</mat-icon>
+                  <span>This event has been cancelled by the administrator.</span>
+                </div>
+                <div *ngIf="isRescheduled(timeslot)" class="status-message rescheduled-message">
+                  <mat-icon>info</mat-icon>
+                  <span>This event has been rescheduled to a new date and time.</span>
+                  <span *ngIf="timeslot.original_date" class="original-details">
+                    Original: {{ formatDisplayDate(timeslot.original_date) }} at {{ formatTime(timeslot.original_start_time || '') }} - {{ formatTime(timeslot.original_end_time || '') }}
+                  </span>
+                </div>
+              </div>
+              
               <div class="timeslot-time">
                 {{ formatTime(timeslot.start_time) }} - {{ formatTime(timeslot.end_time) }}
+                <span *ngIf="isRescheduled(timeslot) && timeslot.original_date" class="original-time">
+                  (Originally: {{ formatTime(timeslot.original_start_time || '') }} - {{ formatTime(timeslot.original_end_time || '') }})
+                </span>
               </div>
               <div class="seats-info">
-                <span *ngIf="!isEventEnded(timeslot)" class="seats-available">
+                <span *ngIf="!isEventEnded(timeslot) && !isCancelled(timeslot)" class="seats-available">
                   <mat-icon>event_seat</mat-icon>
                   {{ getAvailableSeats(timeslot) }} / {{ timeslot.capacity }} seats available
                 </span>
-                <span *ngIf="isEventEnded(timeslot)" class="ended-label">
+                <span *ngIf="isCancelled(timeslot)" class="cancelled-label">
+                  <mat-icon>cancel</mat-icon>
+                  Event Cancelled
+                </span>
+                <span *ngIf="isEventEnded(timeslot) && !isCancelled(timeslot)" class="ended-label">
                   <mat-icon>event_busy</mat-icon>
                   Event Ended
                 </span>
-                <span *ngIf="isFull(timeslot) && !isEventEnded(timeslot)" class="full-label">
+                <span *ngIf="isFull(timeslot) && !isEventEnded(timeslot) && !isCancelled(timeslot)" class="full-label">
                   <mat-icon>event_busy</mat-icon>
                   Full
                 </span>
+              </div>
+              <div class="booked-users" *ngIf="authService.isAdmin() && timeslot.booked_by.length > 0">
+                <strong>Booked by:</strong>
+                <span *ngFor="let userId of timeslot.booked_by" class="booked-user">{{ userId }}</span>
               </div>
               <div class="timeslot-actions">
                 <button *ngIf="canBook(timeslot)" 
@@ -68,17 +105,20 @@
                         (click)="bookTimeslot(timeslot)">
                   Book
                 </button>
-                <button *ngIf="isBookedByUser(timeslot)" 
+                <button *ngIf="isBookedByUser(timeslot) && !isCancelled(timeslot)" 
                         mat-raised-button 
                         color="warn" 
                         (click)="unbookTimeslot(timeslot)">
                   Unbook
                 </button>
-                <span *ngIf="isFull(timeslot) && !isBookedByUser(timeslot) && !isEventEnded(timeslot)" class="booked-label">
+                <span *ngIf="isFull(timeslot) && !isBookedByUser(timeslot) && !isEventEnded(timeslot) && !isCancelled(timeslot)" class="booked-label">
                   Full
                 </span>
-                <span *ngIf="isEventEnded(timeslot)" class="booked-label">
+                <span *ngIf="isEventEnded(timeslot) && !isCancelled(timeslot)" class="booked-label">
                   Ended
+                </span>
+                <span *ngIf="isCancelled(timeslot)" class="booked-label">
+                  Cancelled
                 </span>
               </div>
             </div>

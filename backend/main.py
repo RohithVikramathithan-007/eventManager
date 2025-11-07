@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException, Depends, status
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional
-from datetime import datetime, date, time
+from datetime import datetime, date, time, timedelta
 from enum import Enum
 import uuid
 from database import get_db_connection, verify_password, init_db
@@ -47,6 +47,10 @@ class TimeSlot(BaseModel):
     end_time: str  # HH:MM format
     booked_by: List[str] = []  # List of User IDs
     capacity: int = 1  # Maximum number of seats
+    status: str = "active"  # "active", "cancelled", "rescheduled"
+    original_date: Optional[str] = None  # Original date if rescheduled
+    original_start_time: Optional[str] = None  # Original start time if rescheduled
+    original_end_time: Optional[str] = None  # Original end time if rescheduled
 
 class TimeSlotCreate(BaseModel):
     category: EventCategory
@@ -54,6 +58,11 @@ class TimeSlotCreate(BaseModel):
     start_time: str
     end_time: str
     capacity: int = 1  # Maximum number of seats
+
+class TimeSlotReschedule(BaseModel):
+    date: str
+    start_time: str
+    end_time: str
 
 class TimeSlotBook(BaseModel):
     user_id: str
@@ -169,9 +178,9 @@ def get_timeslots(
 
 @app.post("/api/timeslots")
 def create_timeslot(timeslot: TimeSlotCreate, current_user: dict = Depends(get_current_admin)):
-    """Create a new timeslot (Admin only)"""
-    if timeslot.capacity < 1:
-        raise HTTPException(status_code=400, detail="Capacity must be at least 1")
+    """Create a new timeslot (Admin only) - capacity is fixed to 1"""
+    # Force capacity to 1
+    capacity = 1
     
     new_timeslot = TimeSlot(
         id=str(uuid.uuid4()),
@@ -180,7 +189,8 @@ def create_timeslot(timeslot: TimeSlotCreate, current_user: dict = Depends(get_c
         start_time=timeslot.start_time,
         end_time=timeslot.end_time,
         booked_by=[],
-        capacity=timeslot.capacity
+        capacity=capacity,  # Always 1
+        status="active"
     )
     timeslots.append(new_timeslot)
     return new_timeslot
@@ -195,10 +205,14 @@ def get_timeslot(timeslot_id: str):
 
 @app.post("/api/timeslots/{timeslot_id}/book")
 def book_timeslot(timeslot_id: str, current_user: dict = Depends(get_current_user)):
-    """Book a timeslot"""
+    """Book a timeslot - only one booking per user per event"""
     user_id = current_user["username"]
     for ts in timeslots:
         if ts.id == timeslot_id:
+            # Check if event is cancelled
+            if ts.status == "cancelled":
+                raise HTTPException(status_code=400, detail="Cannot book cancelled events")
+            
             # Check if event has ended
             try:
                 event_datetime = datetime.strptime(f"{ts.date} {ts.end_time}", "%Y-%m-%d %H:%M")
@@ -244,8 +258,158 @@ def delete_timeslot(timeslot_id: str, current_user: dict = Depends(get_current_a
     timeslots = [ts for ts in timeslots if ts.id != timeslot_id]
     return {"message": "Timeslot deleted successfully"}
 
+@app.post("/api/timeslots/{timeslot_id}/cancel")
+def cancel_timeslot(timeslot_id: str, current_user: dict = Depends(get_current_admin)):
+    """Cancel a timeslot (Admin only)"""
+    for ts in timeslots:
+        if ts.id == timeslot_id:
+            ts.status = "cancelled"
+            return {"message": "Timeslot cancelled successfully", "timeslot": ts}
+    raise HTTPException(status_code=404, detail="Timeslot not found")
+
+@app.post("/api/timeslots/{timeslot_id}/reschedule")
+def reschedule_timeslot(timeslot_id: str, reschedule_data: TimeSlotReschedule, current_user: dict = Depends(get_current_admin)):
+    """Reschedule a timeslot to a later date (Admin only)"""
+    for ts in timeslots:
+        if ts.id == timeslot_id:
+            # Store original date/time if not already stored
+            if not ts.original_date:
+                ts.original_date = ts.date
+                ts.original_start_time = ts.start_time
+                ts.original_end_time = ts.end_time
+            
+            # Validate new date is in the future
+            try:
+                new_datetime = datetime.strptime(f"{reschedule_data.date} {reschedule_data.end_time}", "%Y-%m-%d %H:%M")
+                if new_datetime < datetime.now():
+                    raise HTTPException(status_code=400, detail="New date must be in the future")
+            except ValueError:
+                raise HTTPException(status_code=400, detail="Invalid date or time format")
+            
+            # Update to new date/time
+            ts.date = reschedule_data.date
+            ts.start_time = reschedule_data.start_time
+            ts.end_time = reschedule_data.end_time
+            ts.status = "rescheduled"
+            
+            return {"message": "Timeslot rescheduled successfully", "timeslot": ts}
+    raise HTTPException(status_code=404, detail="Timeslot not found")
+
+@app.post("/api/admin/create-sample-events")
+def create_sample_events(current_user: dict = Depends(get_current_admin)):
+    """Create sample events for the next 2 weeks (Admin only)"""
+    import random
+    
+    today = datetime.now().date()
+    categories = list(EventCategory)
+    times_available = [
+        ("09:00", "11:00"),
+        ("10:00", "12:00"),
+        ("14:00", "16:00"),
+        ("15:00", "17:00"),
+        ("18:00", "20:00"),
+        ("19:00", "21:00")
+    ]
+    
+    created_count = 0
+    for day_offset in range(14):  # Next 2 weeks
+        event_date = today + timedelta(days=day_offset)
+        date_str = event_date.strftime("%Y-%m-%d")
+        
+        # Create 2-4 events per day
+        num_events = random.randint(2, 4)
+        for _ in range(num_events):
+            category = random.choice(categories)
+            start_time, end_time = random.choice(times_available)
+            capacity = 1  # Hard set to 1 seat per event
+            
+            new_timeslot = TimeSlot(
+                id=str(uuid.uuid4()),
+                category=category,
+                date=date_str,
+                start_time=start_time,
+                end_time=end_time,
+                booked_by=[],
+                capacity=capacity,
+                status="active"
+            )
+            timeslots.append(new_timeslot)
+            created_count += 1
+    
+    return {"message": f"Created {created_count} sample events for the next 2 weeks", "count": created_count}
+
+@app.get("/api/notifications")
+def get_notifications(current_user: dict = Depends(get_current_user)):
+    """Get notifications for cancelled/rescheduled events that the user has booked"""
+    user_id = current_user["username"]
+    today = datetime.now().date()
+    today_str = today.strftime("%Y-%m-%d")
+    
+    # Get all timeslots where user has booked (including past events)
+    # We check all events, not just future ones, in case past events were cancelled/rescheduled
+    user_bookings = [ts for ts in timeslots if user_id in ts.booked_by]
+    
+    # Filter for events that are cancelled or rescheduled
+    # Include both past and future events that were impacted
+    cancelled_events = [ts for ts in user_bookings if ts.status == "cancelled"]
+    rescheduled_events = [ts for ts in user_bookings if ts.status == "rescheduled"]
+    
+    # For rescheduled events, only notify about future events or recently rescheduled ones
+    # (within last 7 days or future)
+    recent_date = (today - timedelta(days=7)).strftime("%Y-%m-%d")
+    future_rescheduled = [
+        ts for ts in rescheduled_events 
+        if ts.date >= recent_date  # Recent or future rescheduled events
+    ]
+    
+    cancelled_count = len(cancelled_events)
+    rescheduled_count = len(future_rescheduled)
+    
+    notifications = []
+    if cancelled_count > 0:
+        # Show details of cancelled events
+        cancelled_details = []
+        for ts in cancelled_events[:3]:  # Show up to 3 cancelled events
+            # Get category display name (enum value)
+            category_name = ts.category.value if isinstance(ts.category, EventCategory) else str(ts.category)
+            cancelled_details.append(f"{category_name} on {ts.date}")
+        detail_text = f": {', '.join(cancelled_details)}" if cancelled_details else ""
+        if cancelled_count > 3:
+            detail_text += f" and {cancelled_count - 3} more"
+        
+        notifications.append({
+            "type": "cancelled",
+            "count": cancelled_count,
+            "message": f"You have {cancelled_count} cancelled event(s){detail_text}"
+        })
+    
+    if rescheduled_count > 0:
+        # Show details of rescheduled events
+        rescheduled_details = []
+        for ts in future_rescheduled[:3]:  # Show up to 3 rescheduled events
+            # Get category display name (enum value)
+            category_name = ts.category.value if isinstance(ts.category, EventCategory) else str(ts.category)
+            original_info = ""
+            if ts.original_date:
+                original_info = f" (was {ts.original_date})"
+            rescheduled_details.append(f"{category_name} on {ts.date}{original_info}")
+        detail_text = f": {', '.join(rescheduled_details)}" if rescheduled_details else ""
+        if rescheduled_count > 3:
+            detail_text += f" and {rescheduled_count - 3} more"
+        
+        notifications.append({
+            "type": "rescheduled",
+            "count": rescheduled_count,
+            "message": f"You have {rescheduled_count} rescheduled event(s){detail_text}"
+        })
+    
+    return {
+        "notifications": notifications,
+        "total": cancelled_count + rescheduled_count
+    }
+
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
 
 

@@ -7,10 +7,16 @@
     <mat-card-content>
       <!-- Create Timeslot Form -->
       <div class="form-section">
-        <button mat-raised-button color="primary" (click)="toggleForm()">
-          <mat-icon>{{ showForm ? 'close' : 'add' }}</mat-icon>
-          {{ showForm ? 'Cancel' : 'Create New Timeslot' }}
-        </button>
+        <div class="action-buttons">
+          <button mat-raised-button color="primary" (click)="toggleForm()">
+            <mat-icon>{{ showForm ? 'close' : 'add' }}</mat-icon>
+            {{ showForm ? 'Cancel' : 'Create New Timeslot' }}
+          </button>
+          <button mat-raised-button color="accent" (click)="createSampleEvents()">
+            <mat-icon>auto_awesome</mat-icon>
+            Create Sample Events (2 Weeks)
+          </button>
+        </div>
 
         <div *ngIf="showForm" class="timeslot-form">
           <form [formGroup]="timeslotForm" (ngSubmit)="createTimeslot()">
@@ -54,19 +60,13 @@
               </mat-form-field>
             </div>
 
-            <div class="form-row">
-              <mat-form-field appearance="outline">
-                <mat-label>Capacity (Seats)</mat-label>
-                <input matInput type="number" formControlName="capacity" min="1" placeholder="1">
-                <mat-hint>Maximum number of people who can book this event</mat-hint>
-                <mat-error *ngIf="timeslotForm.get('capacity')?.hasError('required')">
-                  Capacity is required
-                </mat-error>
-                <mat-error *ngIf="timeslotForm.get('capacity')?.hasError('min')">
-                  Capacity must be at least 1
-                </mat-error>
-              </mat-form-field>
-            </div>
+                  <div class="form-row">
+                    <mat-form-field appearance="outline">
+                      <mat-label>Capacity (Seats)</mat-label>
+                      <input matInput type="number" formControlName="capacity" min="1" max="1" value="1" readonly>
+                      <mat-hint>Fixed to 1 seat per event</mat-hint>
+                    </mat-form-field>
+                  </div>
 
             <div class="form-actions">
               <button mat-raised-button color="primary" type="submit">Create Timeslot</button>
@@ -114,12 +114,47 @@
                 <span [class.full]="isFull(timeslot)">
                   {{ getBookedStatus(timeslot) }}
                 </span>
+                <div *ngIf="timeslot.booked_by.length > 0" class="booked-users-list">
+                  <span *ngFor="let userId of timeslot.booked_by" class="booked-user-chip">{{ userId }}</span>
+                </div>
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="status">
+              <th mat-header-cell *matHeaderCellDef>Status</th>
+              <td mat-cell *matCellDef="let timeslot">
+                <span *ngIf="isCancelled(timeslot)" class="status-badge cancelled-badge">
+                  <mat-icon>cancel</mat-icon>
+                  Cancelled
+                </span>
+                <span *ngIf="isRescheduled(timeslot)" class="status-badge rescheduled-badge">
+                  <mat-icon>event_repeat</mat-icon>
+                  Rescheduled
+                </span>
+                <span *ngIf="!isCancelled(timeslot) && !isRescheduled(timeslot)" class="status-badge active-badge">
+                  <mat-icon>check_circle</mat-icon>
+                  Active
+                </span>
               </td>
             </ng-container>
 
             <ng-container matColumnDef="actions">
               <th mat-header-cell *matHeaderCellDef>Actions</th>
               <td mat-cell *matCellDef="let timeslot">
+                <button mat-icon-button 
+                        color="accent" 
+                        (click)="cancelTimeslot(timeslot)" 
+                        *ngIf="!isCancelled(timeslot)"
+                        matTooltip="Cancel timeslot">
+                  <mat-icon>cancel</mat-icon>
+                </button>
+                <button mat-icon-button 
+                        color="primary" 
+                        (click)="rescheduleTimeslot(timeslot)" 
+                        *ngIf="!isCancelled(timeslot)"
+                        matTooltip="Reschedule timeslot">
+                  <mat-icon>event_repeat</mat-icon>
+                </button>
                 <button mat-icon-button color="warn" (click)="deleteTimeslot(timeslot.id)" 
                         matTooltip="Delete timeslot">
                   <mat-icon>delete</mat-icon>

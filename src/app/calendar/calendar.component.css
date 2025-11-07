@@ -104,6 +104,17 @@
   border-color: #4caf50;
 }
 
+.timeslot-card.cancelled {
+  background-color: #ffebee;
+  border-color: #d32f2f;
+  opacity: 0.7;
+}
+
+.timeslot-card.rescheduled {
+  background-color: #fff3e0;
+  border-color: #ff9800;
+}
+
 .timeslot-header {
   margin-bottom: 8px;
 }
@@ -170,6 +181,122 @@
   font-size: 16px;
   width: 16px;
   height: 16px;
+}
+
+.cancelled-label {
+  color: #d32f2f;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.cancelled-label mat-icon {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+  margin-left: 8px;
+}
+
+.status-badge mat-icon {
+  font-size: 14px;
+  width: 14px;
+  height: 14px;
+}
+
+.cancelled-badge {
+  background-color: #ffebee;
+  color: #d32f2f;
+}
+
+.rescheduled-badge {
+  background-color: #fff3e0;
+  color: #ff9800;
+}
+
+.original-time {
+  font-size: 11px;
+  color: #757575;
+  font-style: italic;
+  display: block;
+  margin-top: 4px;
+}
+
+.booked-users {
+  margin-top: 8px;
+  padding: 8px;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.booked-users strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.booked-user {
+  display: inline-block;
+  background-color: #e3f2fd;
+  color: #1976d2;
+  padding: 2px 8px;
+  border-radius: 12px;
+  margin: 2px 4px 2px 0;
+  font-size: 11px;
+}
+
+.event-description {
+  margin: 8px 0;
+  padding: 8px;
+  border-radius: 4px;
+}
+
+.status-message {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 4px;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.status-message mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.cancelled-message {
+  background-color: #ffebee;
+  color: #c62828;
+  border-left: 3px solid #d32f2f;
+}
+
+.rescheduled-message {
+  background-color: #fff3e0;
+  color: #e65100;
+  border-left: 3px solid #ff9800;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.original-details {
+  font-size: 12px;
+  font-style: italic;
+  margin-left: 26px;
+  color: #757575;
 }
 
 .timeslot-actions {

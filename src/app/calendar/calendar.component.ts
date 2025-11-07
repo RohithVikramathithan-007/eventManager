@@ -24,9 +24,9 @@ export class CalendarComponent implements OnInit {
   userPreferences: EventCategory[] = [];
 
   constructor(
-    private dataService: DataServiceService,
+    public dataService: DataServiceService,
     private snackBar: MatSnackBar,
-    private authService: AuthService
+    public authService: AuthService
   ) {
     this.initializeWeek();
   }
@@ -35,6 +35,9 @@ export class CalendarComponent implements OnInit {
     const user = this.authService.getCurrentUser();
     if (user) {
       this.userId = user.username;
+    } else {
+      // If no user, verify token
+      this.authService.verifyToken();
     }
     this.loadUserPreferences();
     this.loadTimeslots();
@@ -98,7 +101,15 @@ export class CalendarComponent implements OnInit {
       },
       error: (err) => {
         console.error('Error loading timeslots:', err);
-        this.snackBar.open('Error loading timeslots', 'Close', { duration: 3000 });
+        if (err.status === 401 || err.status === 403) {
+          this.snackBar.open('Authentication required. Please login again.', 'Close', { duration: 3000 });
+          // Redirect to login if not authenticated
+          if (!this.authService.isAuthenticated()) {
+            // This will be handled by the auth guard
+          }
+        } else {
+          this.snackBar.open('Error loading timeslots', 'Close', { duration: 3000 });
+        }
       }
     });
   }
@@ -134,7 +145,11 @@ export class CalendarComponent implements OnInit {
     return `${this.formatDisplayDate(this.currentWeekStart)} - ${this.formatDisplayDate(endDate)}`;
   }
 
-  formatDisplayDate(date: Date): string {
+  formatDisplayDate(date: Date | string): string {
+    if (typeof date === 'string') {
+      const d = new Date(date);
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   }
 
@@ -148,12 +163,17 @@ export class CalendarComponent implements OnInit {
   }
 
   canBook(timeslot: TimeSlot): boolean {
+    // Check if event is cancelled
+    if (this.isCancelled(timeslot)) {
+      return false;
+    }
+    
     // Check if event has ended
     if (this.isEventEnded(timeslot)) {
       return false; // Event has ended
     }
     
-    // Check if user already booked
+    // Check if user already booked (only one signup per event per user)
     if (this.isBookedByUser(timeslot)) {
       return false;
     }
@@ -226,7 +246,20 @@ export class CalendarComponent implements OnInit {
     return timeslot.booked_by.length >= timeslot.capacity;
   }
 
+  isCancelled(timeslot: TimeSlot): boolean {
+    return timeslot.status === 'cancelled' || timeslot.status === 'Cancelled';
+  }
+
+  isRescheduled(timeslot: TimeSlot): boolean {
+    return timeslot.status === 'rescheduled' || timeslot.status === 'Rescheduled';
+  }
+
   bookTimeslot(timeslot: TimeSlot): void {
+    if (this.isCancelled(timeslot)) {
+      this.snackBar.open('Cannot book cancelled events', 'Close', { duration: 3000 });
+      return;
+    }
+
     if (this.isEventEnded(timeslot)) {
       this.snackBar.open('Cannot book events that have already ended', 'Close', { duration: 3000 });
       return;
@@ -246,6 +279,8 @@ export class CalendarComponent implements OnInit {
       next: () => {
         this.snackBar.open('Successfully booked timeslot!', 'Close', { duration: 3000 });
         this.loadTimeslots();
+        // Trigger notification refresh in parent component
+        window.dispatchEvent(new Event('notifications-update'));
       },
       error: (err) => {
         console.error('Error booking timeslot:', err);
@@ -265,6 +300,8 @@ export class CalendarComponent implements OnInit {
       next: () => {
         this.snackBar.open('Successfully unbooked timeslot!', 'Close', { duration: 3000 });
         this.loadTimeslots();
+        // Trigger notification refresh in parent component
+        window.dispatchEvent(new Event('notifications-update'));
       },
       error: (err) => {
         console.error('Error unbooking timeslot:', err);

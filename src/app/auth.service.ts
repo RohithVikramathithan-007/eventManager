@@ -94,7 +94,11 @@ export class AuthService {
       return;
     }
 
-    this.http.get<UserInfo>(`${this.apiUrl}/auth/me`).subscribe({
+    this.http.get<UserInfo>(`${this.apiUrl}/auth/me`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    }).subscribe({
       next: (user) => {
         this.setUser(user);
       },

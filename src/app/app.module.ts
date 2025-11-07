@@ -11,6 +11,7 @@ import { CalendarComponent } from './calendar/calendar.component';
 import { UserPreferencesComponent } from './user-preferences/user-preferences.component';
 import { LoginComponent } from './login/login.component';
 import { AuthService } from './auth.service';
+import { RescheduleDialogComponent } from './admin/reschedule-dialog.component';
 
 // Angular Material Modules
 import { MatToolbarModule } from '@angular/material/toolbar';
@@ -36,7 +37,8 @@ import { MatTooltipModule } from '@angular/material/tooltip';
     AdminComponent,
     CalendarComponent,
     UserPreferencesComponent,
-    LoginComponent
+    LoginComponent,
+    RescheduleDialogComponent
   ],
   imports: [
     BrowserModule,
