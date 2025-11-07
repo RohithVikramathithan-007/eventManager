@@ -369,16 +369,20 @@ def get_notifications(current_user: dict = Depends(get_current_user)):
     
     # Filter for events that are cancelled or rescheduled
     # Include both past and future events that were impacted
-    cancelled_events = [ts for ts in user_bookings if ts.status == "cancelled"]
-    rescheduled_events = [ts for ts in user_bookings if ts.status == "rescheduled"]
+    # Check status case-insensitively
+    cancelled_events = [ts for ts in user_bookings if ts.status and ts.status.lower() == "cancelled"]
+    rescheduled_events = [ts for ts in user_bookings if ts.status and ts.status.lower() == "rescheduled"]
     
-    # For rescheduled events, only notify about future events or recently rescheduled ones
-    # (within last 7 days or future)
-    recent_date = (today - timedelta(days=7)).strftime("%Y-%m-%d")
-    future_rescheduled = [
-        ts for ts in rescheduled_events 
-        if ts.date >= recent_date  # Recent or future rescheduled events
-    ]
+    # Debug logging
+    print(f"DEBUG: User {user_id} has {len(user_bookings)} booked events")
+    print(f"DEBUG: Found {len(cancelled_events)} cancelled events")
+    print(f"DEBUG: Found {len(rescheduled_events)} rescheduled events")
+    for ts in user_bookings:
+        print(f"DEBUG: Event {ts.id} - Status: {ts.status}, Booked by: {ts.booked_by}")
+    
+    # For rescheduled events, show all rescheduled events (not just future ones)
+    # Users should be notified if an event they booked was rescheduled, regardless of new date
+    future_rescheduled = rescheduled_events
     
     cancelled_count = len(cancelled_events)
     rescheduled_count = len(future_rescheduled)

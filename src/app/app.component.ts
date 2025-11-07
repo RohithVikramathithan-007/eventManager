@@ -19,6 +19,7 @@ export class AppComponent implements OnInit, OnDestroy {
   title = 'eventManagerFrontend';
   notifications: Notification[] = [];
   notificationCount: number = 0;
+  showNotificationDropdown: boolean = false;
   private notificationSubscription?: Subscription;
 
   constructor(
@@ -42,8 +43,12 @@ export class AppComponent implements OnInit, OnDestroy {
 
     // Listen for notification update events
     window.addEventListener('notifications-update', () => {
+      console.log('Notification update event received'); // Debug log
       if (this.authService.isAuthenticated()) {
-        this.loadNotifications();
+        // Small delay to ensure backend has processed the change
+        setTimeout(() => {
+          this.loadNotifications();
+        }, 500);
       }
     });
   }
@@ -56,19 +61,33 @@ export class AppComponent implements OnInit, OnDestroy {
 
   loadNotifications(): void {
     if (!this.authService.isAuthenticated()) {
+      console.log('Not authenticated, skipping notifications');
       return;
     }
 
+    console.log('Loading notifications...');
     this.dataService.getNotifications().subscribe({
       next: (response) => {
+        console.log('Notifications API response:', response);
         this.notifications = response.notifications || [];
         this.notificationCount = response.total || 0;
+        console.log('Notification count:', this.notificationCount);
+        console.log('Notifications array:', this.notifications);
+        if (this.notificationCount > 0) {
+          console.log('Notifications found!', this.notifications);
+        }
       },
       error: (err) => {
         console.error('Error loading notifications:', err);
-        // Don't show error for notifications, just silently fail
+        console.error('Error details:', err.error);
       }
     });
+  }
+
+  toggleNotifications(): void {
+    if (this.hasNotifications()) {
+      this.showNotificationDropdown = !this.showNotificationDropdown;
+    }
   }
 
   isAuthenticated(): boolean {
