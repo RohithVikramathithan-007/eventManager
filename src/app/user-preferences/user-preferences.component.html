@@ -1,0 +1,30 @@
+<div class="preferences-container">
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>User Preferences</mat-card-title>
+      <mat-card-subtitle>Select event categories you are interested in</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="categories-list">
+        <mat-card *ngFor="let category of categories" 
+                  class="category-card" 
+                  [class.selected]="isSelected(category)"
+                  (click)="toggleCategory(category)">
+          <mat-card-content>
+            <mat-checkbox 
+              [checked]="isSelected(category)"
+              (change)="toggleCategory(category)"
+              (click)="$event.stopPropagation()">
+              {{ category }}
+            </mat-checkbox>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </mat-card-content>
+    <mat-card-actions>
+      <button mat-raised-button color="primary" (click)="savePreferences()">
+        Save Preferences
+      </button>
+    </mat-card-actions>
+  </mat-card>
+</div>

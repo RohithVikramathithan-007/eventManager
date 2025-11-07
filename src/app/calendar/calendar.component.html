@@ -1,0 +1,75 @@
+<div class="calendar-container">
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>Event Calendar</mat-card-title>
+      <mat-card-subtitle>{{ getWeekRange() }}</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <!-- Week Navigation -->
+      <div class="week-navigation">
+        <button mat-icon-button (click)="previousWeek()">
+          <mat-icon>chevron_left</mat-icon>
+        </button>
+        <span class="week-range">{{ getWeekRange() }}</span>
+        <button mat-icon-button (click)="nextWeek()">
+          <mat-icon>chevron_right</mat-icon>
+        </button>
+        <button mat-button (click)="goToCurrentWeek()">Today</button>
+      </div>
+
+      <!-- Category Filter -->
+      <div class="filter-section">
+        <mat-form-field appearance="outline">
+          <mat-label>Filter by Category</mat-label>
+          <mat-select [(ngModel)]="selectedCategory" (selectionChange)="onCategoryFilterChange()">
+            <mat-option [value]="null">All Categories</mat-option>
+            <mat-option *ngFor="let cat of categories" [value]="cat">{{ cat }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+        <button *ngIf="selectedCategory" mat-button (click)="clearFilter()">Clear Filter</button>
+      </div>
+
+      <!-- Calendar Grid -->
+      <div class="calendar-grid">
+        <div *ngFor="let day of weekDays" class="day-column">
+          <div class="day-header">
+            <div class="day-name">{{ getDayName(day.date) }}</div>
+            <div class="day-date">{{ day.date.getDate() }}</div>
+          </div>
+          <div class="timeslots-container">
+            <div *ngFor="let timeslot of day.timeslots" class="timeslot-card" 
+                 [class.booked]="!canBook(timeslot)"
+                 [class.booked-by-user]="isBookedByUser(timeslot)">
+              <div class="timeslot-header">
+                <span class="category-chip">{{ timeslot.category }}</span>
+              </div>
+              <div class="timeslot-time">
+                {{ formatTime(timeslot.start_time) }} - {{ formatTime(timeslot.end_time) }}
+              </div>
+              <div class="timeslot-actions">
+                <button *ngIf="canBook(timeslot)" 
+                        mat-raised-button 
+                        color="primary" 
+                        (click)="bookTimeslot(timeslot)">
+                  Book
+                </button>
+                <button *ngIf="isBookedByUser(timeslot)" 
+                        mat-raised-button 
+                        color="warn" 
+                        (click)="unbookTimeslot(timeslot)">
+                  Unbook
+                </button>
+                <span *ngIf="!canBook(timeslot) && !isBookedByUser(timeslot)" class="booked-label">
+                  Booked
+                </span>
+              </div>
+            </div>
+            <div *ngIf="day.timeslots.length === 0" class="no-timeslots">
+              No timeslots available
+            </div>
+          </div>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>
