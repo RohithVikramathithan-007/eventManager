@@ -10,7 +10,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 })
 export class AdminComponent implements OnInit {
   timeslots: TimeSlot[] = [];
-  displayedColumns: string[] = ['category', 'date', 'start_time', 'end_time', 'booked_by', 'actions'];
+  displayedColumns: string[] = ['category', 'date', 'start_time', 'end_time', 'capacity', 'booked', 'actions'];
   categories: EventCategory[] = Object.values(EventCategory);
   
   timeslotForm: FormGroup;
@@ -25,7 +25,8 @@ export class AdminComponent implements OnInit {
       category: ['', Validators.required],
       date: ['', Validators.required],
       start_time: ['', Validators.required],
-      end_time: ['', Validators.required]
+      end_time: ['', Validators.required],
+      capacity: [1, [Validators.required, Validators.min(1)]]
     });
   }
 
@@ -55,6 +56,7 @@ export class AdminComponent implements OnInit {
     this.showForm = !this.showForm;
     if (!this.showForm) {
       this.timeslotForm.reset();
+      this.timeslotForm.patchValue({ capacity: 1 }); // Reset to default
     }
   }
 
@@ -65,19 +67,22 @@ export class AdminComponent implements OnInit {
         category: formValue.category,
         date: this.formatDate(formValue.date),
         start_time: formValue.start_time,
-        end_time: formValue.end_time
+        end_time: formValue.end_time,
+        capacity: formValue.capacity || 1
       };
 
       this.dataService.createTimeslot(timeslot).subscribe({
         next: () => {
           this.snackBar.open('Timeslot created successfully!', 'Close', { duration: 3000 });
           this.timeslotForm.reset();
+          this.timeslotForm.patchValue({ capacity: 1 }); // Reset to default
           this.showForm = false;
           this.loadTimeslots();
         },
         error: (err) => {
           console.error('Error creating timeslot:', err);
-          this.snackBar.open('Error creating timeslot', 'Close', { duration: 3000 });
+          const errorMsg = err.error?.detail || 'Error creating timeslot';
+          this.snackBar.open(errorMsg, 'Close', { duration: 3000 });
         }
       });
     } else {
@@ -102,7 +107,11 @@ export class AdminComponent implements OnInit {
 
   formatDate(date: Date | string): string {
     if (date instanceof Date) {
-      return date.toISOString().split('T')[0];
+      // Format date in local timezone to avoid UTC conversion issues
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
     }
     return date;
   }
@@ -117,10 +126,16 @@ export class AdminComponent implements OnInit {
   }
 
   getBookedStatus(timeslot: TimeSlot): string {
-    return timeslot.booked_by ? `Booked by: ${timeslot.booked_by}` : 'Available';
+    const bookedCount = timeslot.booked_by.length;
+    const available = timeslot.capacity - bookedCount;
+    return `${bookedCount} / ${timeslot.capacity} booked (${available} available)`;
   }
 
-  isBooked(timeslot: TimeSlot): boolean {
-    return timeslot.booked_by !== null;
+  getBookedCount(timeslot: TimeSlot): number {
+    return timeslot.booked_by.length;
+  }
+
+  isFull(timeslot: TimeSlot): boolean {
+    return timeslot.booked_by.length >= timeslot.capacity;
   }
 }

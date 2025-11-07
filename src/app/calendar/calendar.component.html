@@ -38,13 +38,28 @@
           </div>
           <div class="timeslots-container">
             <div *ngFor="let timeslot of day.timeslots" class="timeslot-card" 
-                 [class.booked]="!canBook(timeslot)"
+                 [class.ended]="isEventEnded(timeslot)"
+                 [class.full]="isFull(timeslot) && !isEventEnded(timeslot)"
                  [class.booked-by-user]="isBookedByUser(timeslot)">
               <div class="timeslot-header">
                 <span class="category-chip">{{ timeslot.category }}</span>
               </div>
               <div class="timeslot-time">
                 {{ formatTime(timeslot.start_time) }} - {{ formatTime(timeslot.end_time) }}
+              </div>
+              <div class="seats-info">
+                <span *ngIf="!isEventEnded(timeslot)" class="seats-available">
+                  <mat-icon>event_seat</mat-icon>
+                  {{ getAvailableSeats(timeslot) }} / {{ timeslot.capacity }} seats available
+                </span>
+                <span *ngIf="isEventEnded(timeslot)" class="ended-label">
+                  <mat-icon>event_busy</mat-icon>
+                  Event Ended
+                </span>
+                <span *ngIf="isFull(timeslot) && !isEventEnded(timeslot)" class="full-label">
+                  <mat-icon>event_busy</mat-icon>
+                  Full
+                </span>
               </div>
               <div class="timeslot-actions">
                 <button *ngIf="canBook(timeslot)" 
@@ -59,8 +74,11 @@
                         (click)="unbookTimeslot(timeslot)">
                   Unbook
                 </button>
-                <span *ngIf="!canBook(timeslot) && !isBookedByUser(timeslot)" class="booked-label">
-                  Booked
+                <span *ngIf="isFull(timeslot) && !isBookedByUser(timeslot) && !isEventEnded(timeslot)" class="booked-label">
+                  Full
+                </span>
+                <span *ngIf="isEventEnded(timeslot)" class="booked-label">
+                  Ended
                 </span>
               </div>
             </div>

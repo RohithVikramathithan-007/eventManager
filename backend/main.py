@@ -35,13 +35,15 @@ class TimeSlot(BaseModel):
     date: str  # ISO format date string
     start_time: str  # HH:MM format
     end_time: str  # HH:MM format
-    booked_by: Optional[str] = None  # User ID
+    booked_by: List[str] = []  # List of User IDs
+    capacity: int = 1  # Maximum number of seats
 
 class TimeSlotCreate(BaseModel):
     category: EventCategory
     date: str
     start_time: str
     end_time: str
+    capacity: int = 1  # Maximum number of seats
 
 class TimeSlotBook(BaseModel):
     user_id: str
@@ -100,13 +102,17 @@ def get_timeslots(
 @app.post("/api/timeslots")
 def create_timeslot(timeslot: TimeSlotCreate):
     """Create a new timeslot (Admin only)"""
+    if timeslot.capacity < 1:
+        raise HTTPException(status_code=400, detail="Capacity must be at least 1")
+    
     new_timeslot = TimeSlot(
         id=str(uuid.uuid4()),
         category=timeslot.category,
         date=timeslot.date,
         start_time=timeslot.start_time,
         end_time=timeslot.end_time,
-        booked_by=None
+        booked_by=[],
+        capacity=timeslot.capacity
     )
     timeslots.append(new_timeslot)
     return new_timeslot
@@ -124,9 +130,24 @@ def book_timeslot(timeslot_id: str, booking: TimeSlotBook):
     """Book a timeslot"""
     for ts in timeslots:
         if ts.id == timeslot_id:
-            if ts.booked_by is not None:
-                raise HTTPException(status_code=400, detail="Timeslot already booked")
-            ts.booked_by = booking.user_id
+            # Check if event has ended
+            try:
+                event_datetime = datetime.strptime(f"{ts.date} {ts.end_time}", "%Y-%m-%d %H:%M")
+                if event_datetime < datetime.now():
+                    raise HTTPException(status_code=400, detail="Cannot book events that have already ended")
+            except ValueError:
+                # If date parsing fails, allow booking (shouldn't happen with valid data)
+                pass
+            
+            # Check if user already booked
+            if booking.user_id in ts.booked_by:
+                raise HTTPException(status_code=400, detail="You have already booked this timeslot")
+            
+            # Check if capacity is full
+            if len(ts.booked_by) >= ts.capacity:
+                raise HTTPException(status_code=400, detail="Timeslot is full")
+            
+            ts.booked_by.append(booking.user_id)
             return ts
     raise HTTPException(status_code=404, detail="Timeslot not found")
 
@@ -135,9 +156,9 @@ def unbook_timeslot(timeslot_id: str, user_id: str):
     """Unbook a timeslot"""
     for ts in timeslots:
         if ts.id == timeslot_id:
-            if ts.booked_by != user_id:
-                raise HTTPException(status_code=403, detail="Not authorized to unbook this timeslot")
-            ts.booked_by = None
+            if user_id not in ts.booked_by:
+                raise HTTPException(status_code=403, detail="You have not booked this timeslot")
+            ts.booked_by.remove(user_id)
             return {"message": "Timeslot unbooked successfully"}
     raise HTTPException(status_code=404, detail="Timeslot not found")
 

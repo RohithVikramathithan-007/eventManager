@@ -142,16 +142,97 @@ export class CalendarComponent implements OnInit {
   }
 
   canBook(timeslot: TimeSlot): boolean {
-    return timeslot.booked_by === null;
+    // Check if event has ended
+    if (this.isEventEnded(timeslot)) {
+      return false; // Event has ended
+    }
+    
+    // Check if user already booked
+    if (this.isBookedByUser(timeslot)) {
+      return false;
+    }
+    
+    // Check if there are available seats
+    const availableSeats = timeslot.capacity - timeslot.booked_by.length;
+    return availableSeats > 0;
   }
 
   isBookedByUser(timeslot: TimeSlot): boolean {
-    return timeslot.booked_by === this.userId;
+    return timeslot.booked_by.includes(this.userId);
+  }
+
+  getAvailableSeats(timeslot: TimeSlot): number {
+    return timeslot.capacity - timeslot.booked_by.length;
+  }
+
+  isEventEnded(timeslot: TimeSlot): boolean {
+    try {
+      // Parse date components (format: YYYY-MM-DD)
+      const dateParts = timeslot.date.split('-');
+      if (dateParts.length !== 3) {
+        console.warn('Invalid date format:', timeslot.date);
+        return false; // Don't mark as ended if we can't parse
+      }
+      
+      const year = parseInt(dateParts[0], 10);
+      const month = parseInt(dateParts[1], 10);
+      const day = parseInt(dateParts[2], 10);
+      
+      // Parse time components (format: HH:MM)
+      const timeParts = timeslot.end_time.split(':');
+      if (timeParts.length < 2) {
+        console.warn('Invalid time format:', timeslot.end_time);
+        return false; // Don't mark as ended if we can't parse
+      }
+      
+      const hours = parseInt(timeParts[0], 10);
+      const minutes = parseInt(timeParts[1], 10);
+      
+      // Validate parsed values
+      if (isNaN(year) || isNaN(month) || isNaN(day) || isNaN(hours) || isNaN(minutes)) {
+        console.warn('Invalid date/time values:', { year, month, day, hours, minutes });
+        return false;
+      }
+      
+      // Create date object in local timezone
+      const eventEndDate = new Date(year, month - 1, day, hours, minutes || 0, 0, 0);
+      const now = new Date();
+      
+      // Debug logging - check browser console to see what's happening
+      console.log('Event end check:', {
+        date: timeslot.date,
+        time: timeslot.end_time,
+        eventEndDate: eventEndDate.toString(),
+        eventEndDateISO: eventEndDate.toISOString(),
+        now: now.toString(),
+        nowISO: now.toISOString(),
+        isEnded: eventEndDate < now
+      });
+      
+      return eventEndDate < now;
+    } catch (error) {
+      console.error('Error checking if event ended:', error, timeslot);
+      return false; // Don't mark as ended if there's an error
+    }
+  }
+
+  isFull(timeslot: TimeSlot): boolean {
+    return timeslot.booked_by.length >= timeslot.capacity;
   }
 
   bookTimeslot(timeslot: TimeSlot): void {
-    if (!this.canBook(timeslot)) {
-      this.snackBar.open('This timeslot is already booked', 'Close', { duration: 3000 });
+    if (this.isEventEnded(timeslot)) {
+      this.snackBar.open('Cannot book events that have already ended', 'Close', { duration: 3000 });
+      return;
+    }
+
+    if (this.isBookedByUser(timeslot)) {
+      this.snackBar.open('You have already booked this timeslot', 'Close', { duration: 3000 });
+      return;
+    }
+
+    if (this.isFull(timeslot)) {
+      this.snackBar.open('This timeslot is full', 'Close', { duration: 3000 });
       return;
     }
 
@@ -162,7 +243,8 @@ export class CalendarComponent implements OnInit {
       },
       error: (err) => {
         console.error('Error booking timeslot:', err);
-        this.snackBar.open('Error booking timeslot', 'Close', { duration: 3000 });
+        const errorMsg = err.error?.detail || 'Error booking timeslot';
+        this.snackBar.open(errorMsg, 'Close', { duration: 3000 });
       }
     });
   }

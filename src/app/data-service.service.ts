@@ -3,9 +3,14 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 export enum EventCategory {
-  CAT1 = 'Cat 1',
-  CAT2 = 'Cat 2',
-  CAT3 = 'Cat 3'
+  CAT1 = 'Music Festivals',
+  CAT2 = 'Comedy Shows',
+  CAT3 = 'Movies',
+  CAT4 = 'Food Festivals',
+  CAT5 = 'Art Exhibitions',
+  CAT6 = 'Sports Events',
+  CAT7 = 'Tech Conferences',
+  CAT8 = 'Other'
 }
 
 export interface TimeSlot {
@@ -14,7 +19,8 @@ export interface TimeSlot {
   date: string;
   start_time: string;
   end_time: string;
-  booked_by: string | null;
+  booked_by: string[];  // List of User IDs
+  capacity: number;  // Maximum number of seats
 }
 
 export interface TimeSlotCreate {
@@ -22,6 +28,7 @@ export interface TimeSlotCreate {
   date: string;
   start_time: string;
   end_time: string;
+  capacity: number;  // Maximum number of seats
 }
 
 export interface UserPreferences {
