@@ -16,6 +16,7 @@ export enum EventCategory {
 
 export interface TimeSlot {
   id: string;
+  name: string;  // Event name
   category: EventCategory;
   date: string;
   start_time: string;
@@ -29,6 +30,7 @@ export interface TimeSlot {
 }
 
 export interface TimeSlotCreate {
+  name: string;  // Event name
   category: EventCategory;
   date: string;
   start_time: string;

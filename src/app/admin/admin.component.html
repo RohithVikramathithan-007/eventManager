@@ -19,17 +19,30 @@
         </div>
 
         <div *ngIf="showForm" class="timeslot-form">
-          <form [formGroup]="timeslotForm" (ngSubmit)="createTimeslot()">
-            <div class="form-row">
-              <mat-form-field appearance="outline">
-                <mat-label>Category</mat-label>
-                <mat-select formControlName="category">
-                  <mat-option *ngFor="let cat of categories" [value]="cat">{{ cat }}</mat-option>
-                </mat-select>
-                <mat-error *ngIf="timeslotForm.get('category')?.hasError('required')">
-                  Category is required
-                </mat-error>
-              </mat-form-field>
+            <form [formGroup]="timeslotForm" (ngSubmit)="createTimeslot()">
+              <div class="form-row">
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Event Name</mat-label>
+                  <input matInput formControlName="name" placeholder="e.g., Summer Music Festival">
+                  <mat-error *ngIf="timeslotForm.get('name')?.hasError('required')">
+                    Event name is required
+                  </mat-error>
+                  <mat-error *ngIf="timeslotForm.get('name')?.hasError('minlength')">
+                    Event name must be at least 3 characters
+                  </mat-error>
+                </mat-form-field>
+              </div>
+              
+              <div class="form-row">
+                <mat-form-field appearance="outline">
+                  <mat-label>Category</mat-label>
+                  <mat-select formControlName="category">
+                    <mat-option *ngFor="let cat of categories" [value]="cat">{{ cat }}</mat-option>
+                  </mat-select>
+                  <mat-error *ngIf="timeslotForm.get('category')?.hasError('required')">
+                    Category is required
+                  </mat-error>
+                </mat-form-field>
 
               <mat-form-field appearance="outline">
                 <mat-label>Date</mat-label>

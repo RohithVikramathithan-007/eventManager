@@ -41,6 +41,7 @@ class EventCategory(str, Enum):
 # Models
 class TimeSlot(BaseModel):
     id: str
+    name: str  # Event name
     category: EventCategory
     date: str  # ISO format date string
     start_time: str  # HH:MM format
@@ -53,6 +54,7 @@ class TimeSlot(BaseModel):
     original_end_time: Optional[str] = None  # Original end time if rescheduled
 
 class TimeSlotCreate(BaseModel):
+    name: str  # Event name
     category: EventCategory
     date: str
     start_time: str
@@ -184,6 +186,7 @@ def create_timeslot(timeslot: TimeSlotCreate, current_user: dict = Depends(get_c
     
     new_timeslot = TimeSlot(
         id=str(uuid.uuid4()),
+        name=timeslot.name,
         category=timeslot.category,
         date=timeslot.date,
         start_time=timeslot.start_time,
@@ -311,6 +314,18 @@ def create_sample_events(current_user: dict = Depends(get_current_admin)):
         ("19:00", "21:00")
     ]
     
+    # Sample event names by category
+    event_names = {
+        EventCategory.CAT1: ["Summer Music Festival", "Jazz Night", "Rock Concert", "Classical Performance"],
+        EventCategory.CAT2: ["Stand-up Comedy Show", "Improv Night", "Comedy Special", "Laugh Out Loud"],
+        EventCategory.CAT3: ["Movie Premiere", "Film Screening", "Cinema Night", "Movie Marathon"],
+        EventCategory.CAT4: ["Food & Wine Festival", "Taste of the City", "Culinary Experience", "Street Food Fair"],
+        EventCategory.CAT5: ["Art Gallery Opening", "Modern Art Exhibition", "Photography Show", "Sculpture Display"],
+        EventCategory.CAT6: ["Basketball Game", "Soccer Match", "Tennis Tournament", "Swimming Competition"],
+        EventCategory.CAT7: ["Tech Conference", "AI Summit", "Developer Meetup", "Innovation Forum"],
+        EventCategory.CAT8: ["Community Event", "Networking Mixer", "Workshop", "Special Event"]
+    }
+    
     created_count = 0
     for day_offset in range(14):  # Next 2 weeks
         event_date = today + timedelta(days=day_offset)
@@ -322,9 +337,12 @@ def create_sample_events(current_user: dict = Depends(get_current_admin)):
             category = random.choice(categories)
             start_time, end_time = random.choice(times_available)
             capacity = 1  # Hard set to 1 seat per event
+            # Get a random event name for this category
+            name = random.choice(event_names.get(category, ["Event"]))
             
             new_timeslot = TimeSlot(
                 id=str(uuid.uuid4()),
+                name=name,
                 category=category,
                 date=date_str,
                 start_time=start_time,
@@ -372,7 +390,8 @@ def get_notifications(current_user: dict = Depends(get_current_user)):
         for ts in cancelled_events[:3]:  # Show up to 3 cancelled events
             # Get category display name (enum value)
             category_name = ts.category.value if isinstance(ts.category, EventCategory) else str(ts.category)
-            cancelled_details.append(f"{category_name} on {ts.date}")
+            event_name = getattr(ts, 'name', 'Event')
+            cancelled_details.append(f"'{event_name}' ({category_name}) on {ts.date}")
         detail_text = f": {', '.join(cancelled_details)}" if cancelled_details else ""
         if cancelled_count > 3:
             detail_text += f" and {cancelled_count - 3} more"
@@ -389,10 +408,11 @@ def get_notifications(current_user: dict = Depends(get_current_user)):
         for ts in future_rescheduled[:3]:  # Show up to 3 rescheduled events
             # Get category display name (enum value)
             category_name = ts.category.value if isinstance(ts.category, EventCategory) else str(ts.category)
+            event_name = getattr(ts, 'name', 'Event')
             original_info = ""
             if ts.original_date:
                 original_info = f" (was {ts.original_date})"
-            rescheduled_details.append(f"{category_name} on {ts.date}{original_info}")
+            rescheduled_details.append(f"'{event_name}' ({category_name}) on {ts.date}{original_info}")
         detail_text = f": {', '.join(rescheduled_details)}" if rescheduled_details else ""
         if rescheduled_count > 3:
             detail_text += f" and {rescheduled_count - 3} more"

@@ -25,6 +25,7 @@ export class AdminComponent implements OnInit {
     private dialog: MatDialog
   ) {
     this.timeslotForm = this.fb.group({
+      name: ['', [Validators.required, Validators.minLength(3)]],
       category: ['', Validators.required],
       date: ['', Validators.required],
       start_time: ['', Validators.required],
@@ -59,10 +60,10 @@ export class AdminComponent implements OnInit {
     this.showForm = !this.showForm;
     if (!this.showForm) {
       this.timeslotForm.reset();
-      this.timeslotForm.patchValue({ capacity: 1 }); // Reset to default
+      this.timeslotForm.patchValue({ capacity: 1, name: '' }); // Reset to default
     } else {
       // Ensure capacity is set to 1 when opening form
-      this.timeslotForm.patchValue({ capacity: 1 });
+      this.timeslotForm.patchValue({ capacity: 1, name: '' });
     }
   }
 
@@ -70,6 +71,7 @@ export class AdminComponent implements OnInit {
     if (this.timeslotForm.valid) {
       const formValue = this.timeslotForm.value;
       const timeslot: TimeSlotCreate = {
+        name: formValue.name,
         category: formValue.category,
         date: this.formatDate(formValue.date),
         start_time: formValue.start_time,

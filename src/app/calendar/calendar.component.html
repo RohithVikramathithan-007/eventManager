@@ -44,6 +44,7 @@
                  [class.cancelled]="isCancelled(timeslot)"
                  [class.rescheduled]="isRescheduled(timeslot)">
               <div class="timeslot-header">
+                <div class="event-name">{{ timeslot.name }}</div>
                 <span class="category-chip">{{ timeslot.category }}</span>
                 <span *ngIf="isCancelled(timeslot)" class="status-badge cancelled-badge">
                   <mat-icon>cancel</mat-icon>
