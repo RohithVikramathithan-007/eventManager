@@ -1,4 +1,4 @@
-<mat-toolbar color="primary">
+<mat-toolbar color="primary" *ngIf="isAuthenticated()">
   <span>Event Manager</span>
   <span class="spacer"></span>
   <button mat-button routerLink="/calendar" routerLinkActive="active">
@@ -9,10 +9,16 @@
     <mat-icon>settings</mat-icon>
     Preferences
   </button>
-  <button mat-button routerLink="/admin" routerLinkActive="active">
+  <button mat-button routerLink="/admin" routerLinkActive="active" *ngIf="isAdmin()">
     <mat-icon>admin_panel_settings</mat-icon>
     Admin
   </button>
+  <div class="user-info">
+    <span class="username">{{ getUsername() }}</span>
+    <button mat-icon-button (click)="logout()" matTooltip="Logout">
+      <mat-icon>logout</mat-icon>
+    </button>
+  </div>
 </mat-toolbar>
 
 <div class="content">

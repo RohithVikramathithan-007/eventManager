@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { DataServiceService, EventCategory, TimeSlot } from '../data-service.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { AuthService } from '../auth.service';
 
 interface CalendarDay {
   date: Date;
@@ -14,7 +15,7 @@ interface CalendarDay {
   styleUrls: ['./calendar.component.css']
 })
 export class CalendarComponent implements OnInit {
-  userId: string = 'user1'; // In a real app, this would come from auth service
+  userId: string = '';
   currentWeekStart: Date = new Date();
   weekDays: CalendarDay[] = [];
   allTimeslots: TimeSlot[] = [];
@@ -24,12 +25,17 @@ export class CalendarComponent implements OnInit {
 
   constructor(
     private dataService: DataServiceService,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private authService: AuthService
   ) {
     this.initializeWeek();
   }
 
   ngOnInit(): void {
+    const user = this.authService.getCurrentUser();
+    if (user) {
+      this.userId = user.username;
+    }
     this.loadUserPreferences();
     this.loadTimeslots();
   }
@@ -85,7 +91,7 @@ export class CalendarComponent implements OnInit {
     endDate.setDate(endDate.getDate() + 6);
     const endDateStr = this.formatDate(endDate);
 
-    this.dataService.getTimeslots(startDate, endDateStr, this.selectedCategory || undefined, this.userId).subscribe({
+    this.dataService.getTimeslots(startDate, endDateStr, this.selectedCategory || undefined).subscribe({
       next: (timeslots) => {
         this.allTimeslots = timeslots;
         this.assignTimeslotsToDays();
@@ -236,7 +242,7 @@ export class CalendarComponent implements OnInit {
       return;
     }
 
-    this.dataService.bookTimeslot(timeslot.id, this.userId).subscribe({
+    this.dataService.bookTimeslot(timeslot.id).subscribe({
       next: () => {
         this.snackBar.open('Successfully booked timeslot!', 'Close', { duration: 3000 });
         this.loadTimeslots();
@@ -255,7 +261,7 @@ export class CalendarComponent implements OnInit {
       return;
     }
 
-    this.dataService.unbookTimeslot(timeslot.id, this.userId).subscribe({
+    this.dataService.unbookTimeslot(timeslot.id).subscribe({
       next: () => {
         this.snackBar.open('Successfully unbooked timeslot!', 'Close', { duration: 3000 });
         this.loadTimeslots();

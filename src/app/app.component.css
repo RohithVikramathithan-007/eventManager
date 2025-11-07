@@ -17,4 +17,16 @@ mat-toolbar {
   z-index: 1000;
 }
 
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 16px;
+}
+
+.username {
+  font-size: 14px;
+  opacity: 0.9;
+}
+
 

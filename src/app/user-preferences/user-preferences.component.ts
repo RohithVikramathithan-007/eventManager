@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { DataServiceService, EventCategory } from '../data-service.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { AuthService } from '../auth.service';
 
 @Component({
   selector: 'app-user-preferences',
@@ -8,16 +9,21 @@ import { MatSnackBar } from '@angular/material/snack-bar';
   styleUrls: ['./user-preferences.component.css']
 })
 export class UserPreferencesComponent implements OnInit {
-  userId: string = 'user1'; // In a real app, this would come from auth service
+  userId: string = '';
   categories: EventCategory[] = Object.values(EventCategory);
   selectedCategories: EventCategory[] = [];
 
   constructor(
     private dataService: DataServiceService,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private authService: AuthService
   ) { }
 
   ngOnInit(): void {
+    const user = this.authService.getCurrentUser();
+    if (user) {
+      this.userId = user.username;
+    }
     this.loadPreferences();
   }
 

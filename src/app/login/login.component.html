@@ -1,18 +1,61 @@
 <div class="login-container">
-  <mat-card>
+  <mat-card class="login-card">
     <mat-card-header>
-      <mat-card-title>Login</mat-card-title>
+      <mat-card-title>{{ isAdminLogin ? 'Admin Login' : 'User Login' }}</mat-card-title>
       <mat-card-subtitle>Event Manager Application</mat-card-subtitle>
     </mat-card-header>
     <mat-card-content>
-      <p>For demonstration purposes, authentication is not implemented.</p>
-      <p>You can proceed directly to the application.</p>
-      <p><strong>Note:</strong> In a production environment, proper authentication would be required.</p>
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+        <div class="login-type-toggle">
+          <button type="button" mat-button (click)="toggleLoginType()" class="toggle-btn">
+            <mat-icon>{{ isAdminLogin ? 'person' : 'admin_panel_settings' }}</mat-icon>
+            Switch to {{ isAdminLogin ? 'User' : 'Admin' }} Login
+          </button>
+        </div>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Username</mat-label>
+          <input matInput formControlName="username" placeholder="Enter username">
+          <mat-icon matPrefix>person</mat-icon>
+          <mat-error *ngIf="loginForm.get('username')?.hasError('required')">
+            Username is required
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Password</mat-label>
+          <input matInput type="password" formControlName="password" placeholder="Enter password">
+          <mat-icon matPrefix>lock</mat-icon>
+          <mat-error *ngIf="loginForm.get('password')?.hasError('required')">
+            Password is required
+          </mat-error>
+        </mat-form-field>
+
+        <div class="credentials-hint" *ngIf="!isAdminLogin">
+          <p><strong>Demo Credentials:</strong></p>
+          <p>Username: <code>user1</code></p>
+          <p>Password: <code>password1</code></p>
+        </div>
+
+        <div class="credentials-hint" *ngIf="isAdminLogin">
+          <p><strong>Demo Credentials:</strong></p>
+          <p>Username: <code>admin1</code></p>
+          <p>Password: <code>adminpassword1</code></p>
+        </div>
+
+        <div class="form-actions">
+          <button 
+            mat-raised-button 
+            color="primary" 
+            type="submit" 
+            [disabled]="isLoading || !loginForm.valid"
+            class="login-button">
+            <mat-icon *ngIf="!isLoading">{{ isAdminLogin ? 'admin_panel_settings' : 'login' }}</mat-icon>
+            <span *ngIf="isLoading">Logging in...</span>
+            <span *ngIf="!isLoading">{{ isAdminLogin ? 'Admin Login' : 'User Login' }}</span>
+          </button>
+        </div>
+      </form>
     </mat-card-content>
-    <mat-card-actions>
-      <button mat-raised-button color="primary" (click)="skipLogin()">
-        Continue to Application
-      </button>
-    </mat-card-actions>
   </mat-card>
 </div>

@@ -40,3 +40,8 @@ testem.log
 # System files
 .DS_Store
 Thumbs.db
+
+# Database files (comment out if you want to commit the default database)
+# *.db
+# *.sqlite
+# *.sqlite3

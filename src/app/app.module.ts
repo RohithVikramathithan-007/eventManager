@@ -10,6 +10,7 @@ import { AdminComponent } from './admin/admin.component';
 import { CalendarComponent } from './calendar/calendar.component';
 import { UserPreferencesComponent } from './user-preferences/user-preferences.component';
 import { LoginComponent } from './login/login.component';
+import { AuthService } from './auth.service';
 
 // Angular Material Modules
 import { MatToolbarModule } from '@angular/material/toolbar';
