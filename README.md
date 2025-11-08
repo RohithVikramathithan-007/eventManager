@@ -92,7 +92,6 @@ npm install
 ```bash
 ng add @angular/material
 ```
-When prompted, select a theme (e.g., "Indigo/Pink") and answer "Yes" to other questions.
 
 4. Start the development server:
 ```bash
