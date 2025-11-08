@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException, Depends, status
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+import uvicorn
 from typing import List, Optional
 from datetime import datetime, date, time, timedelta
 from enum import Enum
@@ -8,13 +9,13 @@ import uuid
 from database import get_db_connection, verify_password, init_db
 from auth import create_access_token, get_current_user, get_current_admin
 
-# Ensure database is initialized (with error handling)
+# Ensure database is initialized
 try:
     init_db()
-    print("✓ Database initialized successfully")
+    print("Database initialized successfully")
 except Exception as e:
-    print(f"⚠ Warning: Database initialization error: {e}")
-    print("  Please run 'python init_db.py' to initialize the database")
+    print(f"Warning: Database initialization error: {e}")
+    print("Please run 'python init_db.py' to initialize the database")
 
 app = FastAPI(title="Event Manager API")
 
@@ -59,7 +60,7 @@ class TimeSlotCreate(BaseModel):
     date: str
     start_time: str
     end_time: str
-    capacity: int = 1  # Maximum number of seats
+    capacity: int = 1
 
 class TimeSlotReschedule(BaseModel):
     date: str
@@ -77,7 +78,6 @@ class LoginRequest(BaseModel):
     username: str
     password: str
 
-# In-memory storage (in production, use a database)
 timeslots: List[TimeSlot] = []
 user_preferences: dict[str, List[EventCategory]] = {}
 
@@ -181,7 +181,6 @@ def get_timeslots(
 @app.post("/api/timeslots")
 def create_timeslot(timeslot: TimeSlotCreate, current_user: dict = Depends(get_current_admin)):
     """Create a new timeslot (Admin only) - capacity is fixed to 1"""
-    # Force capacity to 1
     capacity = 1
     
     new_timeslot = TimeSlot(
@@ -222,7 +221,7 @@ def book_timeslot(timeslot_id: str, current_user: dict = Depends(get_current_use
                 if event_datetime < datetime.now():
                     raise HTTPException(status_code=400, detail="Cannot book events that have already ended")
             except ValueError:
-                # If date parsing fails, allow booking (shouldn't happen with valid data)
+                # If date parsing fails
                 pass
             
             # Check if user already booked
@@ -327,17 +326,15 @@ def create_sample_events(current_user: dict = Depends(get_current_admin)):
     }
     
     created_count = 0
-    for day_offset in range(14):  # Next 2 weeks
+    for day_offset in range(14):
         event_date = today + timedelta(days=day_offset)
         date_str = event_date.strftime("%Y-%m-%d")
         
-        # Create 2-4 events per day
         num_events = random.randint(2, 4)
         for _ in range(num_events):
             category = random.choice(categories)
             start_time, end_time = random.choice(times_available)
             capacity = 1  # Hard set to 1 seat per event
-            # Get a random event name for this category
             name = random.choice(event_names.get(category, ["Event"]))
             
             new_timeslot = TimeSlot(
@@ -363,25 +360,17 @@ def get_notifications(current_user: dict = Depends(get_current_user)):
     today = datetime.now().date()
     today_str = today.strftime("%Y-%m-%d")
     
-    # Get all timeslots where user has booked (including past events)
-    # We check all events, not just future ones, in case past events were cancelled/rescheduled
+    # Get all timeslots where user has booked
     user_bookings = [ts for ts in timeslots if user_id in ts.booked_by]
     
     # Filter for events that are cancelled or rescheduled
-    # Include both past and future events that were impacted
-    # Check status case-insensitively
     cancelled_events = [ts for ts in user_bookings if ts.status and ts.status.lower() == "cancelled"]
     rescheduled_events = [ts for ts in user_bookings if ts.status and ts.status.lower() == "rescheduled"]
-    
-    # Debug logging
-    print(f"DEBUG: User {user_id} has {len(user_bookings)} booked events")
-    print(f"DEBUG: Found {len(cancelled_events)} cancelled events")
-    print(f"DEBUG: Found {len(rescheduled_events)} rescheduled events")
+
     for ts in user_bookings:
-        print(f"DEBUG: Event {ts.id} - Status: {ts.status}, Booked by: {ts.booked_by}")
+        print(f"Event {ts.id} - Status: {ts.status}, Booked by: {ts.booked_by}")
     
-    # For rescheduled events, show all rescheduled events (not just future ones)
-    # Users should be notified if an event they booked was rescheduled, regardless of new date
+    # Show all rescheduled events
     future_rescheduled = rescheduled_events
     
     cancelled_count = len(cancelled_events)
@@ -391,8 +380,7 @@ def get_notifications(current_user: dict = Depends(get_current_user)):
     if cancelled_count > 0:
         # Show details of cancelled events
         cancelled_details = []
-        for ts in cancelled_events[:3]:  # Show up to 3 cancelled events
-            # Get category display name (enum value)
+        for ts in cancelled_events[:3]:
             category_name = ts.category.value if isinstance(ts.category, EventCategory) else str(ts.category)
             event_name = getattr(ts, 'name', 'Event')
             cancelled_details.append(f"'{event_name}' ({category_name}) on {ts.date}")
@@ -409,8 +397,7 @@ def get_notifications(current_user: dict = Depends(get_current_user)):
     if rescheduled_count > 0:
         # Show details of rescheduled events
         rescheduled_details = []
-        for ts in future_rescheduled[:3]:  # Show up to 3 rescheduled events
-            # Get category display name (enum value)
+        for ts in future_rescheduled[:3]:
             category_name = ts.category.value if isinstance(ts.category, EventCategory) else str(ts.category)
             event_name = getattr(ts, 'name', 'Event')
             original_info = ""
@@ -433,7 +420,6 @@ def get_notifications(current_user: dict = Depends(get_current_user)):
     }
 
 if __name__ == "__main__":
-    import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
 
 

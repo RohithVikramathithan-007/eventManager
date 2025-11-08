@@ -22,26 +22,24 @@ def test_login(username, password):
         
         if response.status_code == 200:
             result = response.json()
-            print(f"✓ Login successful!")
-            print(f"  Username: {result.get('username')}")
-            print(f"  Is Admin: {result.get('is_admin')}")
-            print(f"  Token: {result.get('access_token')[:50]}...")
+            print(f"Login successful!")
+            print(f"Username: {result.get('username')}")
+            print(f"Is Admin: {result.get('is_admin')}")
+            print(f"Token: {result.get('access_token')[:50]}...")
             return True
         else:
-            print(f"✗ Login failed: {response.text}")
+            print(f"Login failed: {response.text}")
             return False
     except requests.exceptions.ConnectionError:
-        print(f"✗ Cannot connect to {BASE_URL}")
-        print("  Make sure the server is running: python main.py")
+        print(f"Cannot connect to {BASE_URL}")
+        print("Make sure the server is running: python main.py")
         return False
     except Exception as e:
-        print(f"✗ Error: {e}")
+        print(f"Error: {e}")
         return False
 
 if __name__ == "__main__":
-    print("=" * 50)
     print("Testing Login Endpoints")
-    print("=" * 50)
     
     # Test user login
     test_login("user1", "password1")
@@ -50,10 +48,8 @@ if __name__ == "__main__":
     test_login("admin1", "adminpassword1")
     
     # Test invalid credentials
-    print("\n" + "=" * 50)
     print("Testing invalid credentials...")
     test_login("user1", "wrongpassword")
     
-    print("\n" + "=" * 50)
     print("Test completed!")
 

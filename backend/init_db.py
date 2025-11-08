@@ -2,7 +2,6 @@
 """
 Database initialization script.
 Run this script to create the database with default users.
-This can be committed to git so users can have a pre-populated database.
 """
 import os
 import sys
@@ -21,7 +20,7 @@ def init_database():
     """Initialize database with tables and default users"""
     print("Initializing database...")
     
-    # Remove existing database if it exists (optional)
+    # Remove existing database if it exists
     if os.path.exists(DB_FILE):
         print(f"Database {DB_FILE} already exists.")
         response = input("Do you want to recreate it? (y/n): ")

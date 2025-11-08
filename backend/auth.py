@@ -7,7 +7,7 @@ from database import get_db_connection, verify_password
 import os
 
 # JWT Configuration
-SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-change-in-production-min-32-chars")
+SECRET_KEY = os.getenv("SECRET_KEY", "charizard")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30 * 24 * 60  # 30 days
 
