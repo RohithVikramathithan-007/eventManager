@@ -61,13 +61,14 @@ cd backend
 ```bash
 pip install -r requirements.txt
 ```
-
-5. Run the backend server:
+3. Initialise DB:
 ```bash
-python main.py
-```
+   python init_db.py
+   ```
 
-Or using uvicorn directly:
+4. Run the backend server:
+
+Using uvicorn directly:
 ```bash
 uvicorn main:app --reload
 ```
@@ -105,7 +106,7 @@ The frontend application will be available at `http://localhost:4200`
 1. **Start the Backend**:
    - Open a terminal
    - Navigate to the `backend` directory
-   - Run `python main.py` or `uvicorn main:app --reload`
+   - Run `uvicorn main:app --reload`
 
 2. **Start the Frontend**:
    - Open another terminal

@@ -18,7 +18,7 @@
 
 3. **Start the server:**
    ```bash
-   python main.py
+   uvicorn main:app --reload
    ```
 
 ## Alternative: Auto-initialization

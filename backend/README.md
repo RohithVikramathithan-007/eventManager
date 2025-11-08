@@ -20,11 +20,7 @@ python init_db.py
 
 ## Running
 
-```bash
-python main.py
-```
-
-Or using uvicorn directly:
+Using uvicorn directly:
 ```bash
 uvicorn main:app --reload
 ```
