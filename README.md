@@ -13,6 +13,10 @@ A full-stack web application for booking events from pre-defined calendar slots.
   - Sign up for available time slots
   - Unsubscribe from booked time slots
   - Visual indicators for booked/available slots
+- **Notifications**: 
+  - Receive notifications for cancelled events
+  - Receive notifications for rescheduled events
+  - Notification count displayed in navigation bar
 
 ### Admin Features
 - **Timeslot Management**: 
@@ -20,26 +24,38 @@ A full-stack web application for booking events from pre-defined calendar slots.
   - View all time slots
   - See booking status for each time slot
   - Delete time slots
+  - Cancel time slots (notifies users who booked)
+  - Reschedule time slots to a later date (notifies users who booked)
+  - Create sample events for the next 2 weeks
 
 
 ## Project Structure
 
 ```
 eventManagerFrontend/
-├── backend/                 # FastAPI backend
-│   ├── main.py             # Main application file
-│   ├── requirements.txt    # Python dependencies
-│   └── README.md          # Backend documentation
+├── backend/                    # FastAPI backend
+│   ├── main.py                # Main application file
+│   ├── auth.py                # JWT authentication
+│   ├── database.py            # Database connection
+│   ├── init_db.py             # Database initialization
+│   ├── requirements.txt       # Python dependencies
+│   └── README.md              # Backend documentation
 ├── src/
 │   ├── app/
-│   │   ├── admin/          # Admin component
-│   │   ├── calendar/       # Calendar component
-│   │   ├── user-preferences/ # User preferences component
-│   │   ├── data-service.service.ts # API service
-│   │   └── app.module.ts   # Main module
-│   └── styles.css          # Global styles
-├── package.json            # Node dependencies
-└── README.md              # This file
+│   │   ├── admin/             # Admin component
+│   │   ├── calendar/          # Calendar component
+│   │   ├── login/             # Login component
+│   │   ├── user-preferences/  # User preferences component
+│   │   ├── app.module.ts      # Main Angular module
+│   │   ├── app-routing.module.ts
+│   │   ├── auth.service.ts    # Authentication service
+│   │   ├── auth.guard.ts      # Route guard
+│   │   └── data-service.service.ts  # API service
+│   ├── main.ts                # Application entry point
+│   └── styles.css             # Global styles
+├── package.json               # Node dependencies
+├── angular.json               # Angular CLI configuration
+└── README.md                  # This file
 ```
 
 ## Prerequisites
@@ -141,6 +157,11 @@ The frontend application will be available at `http://localhost:4200`
    - Click the "Unbook" button
    - The slot will become available again
 
+5. **View Notifications**:
+   - Check the notification bell icon in the navigation bar
+   - Click to see details of cancelled or rescheduled events
+   - Notifications update automatically when events change
+
 ### For Admins
 
 1. **Create Time Slots**:
@@ -162,22 +183,48 @@ The frontend application will be available at `http://localhost:4200`
    - Click the delete icon next to any time slot
    - Confirm the deletion
 
+4. **Cancel Time Slots**:
+   - Click the cancel button next to any time slot
+   - Confirm the cancellation
+   - Users who booked this slot will be notified
+
+5. **Reschedule Time Slots**:
+   - Click the reschedule button next to any time slot
+   - Enter the new date and time in the dialog
+   - Click "Reschedule"
+   - Users who booked this slot will be notified
+
+6. **Create Sample Events**:
+   - Click "Create Sample Events" button
+   - Confirm to create events for the next 2 weeks
+   - Events are randomly generated across all categories
+
 ## API Endpoints
+
+### Authentication
+- `POST /api/auth/login` - Login and get JWT token
+- `GET /api/auth/me` - Get current user information (requires authentication)
 
 ### User Preferences
 - `GET /api/users/{user_id}/preferences` - Get user preferences
 - `PUT /api/users/{user_id}/preferences` - Update user preferences
 
 ### Time Slots
-- `GET /api/timeslots` - Get time slots (with optional filters: start_date, end_date, category, user_id)
-- `POST /api/timeslots` - Create a new time slot (Admin)
+- `GET /api/timeslots` - Get time slots (with optional filters: start_date, end_date, category)
+- `POST /api/timeslots` - Create a new time slot (Admin only)
 - `GET /api/timeslots/{timeslot_id}` - Get a specific time slot
 - `POST /api/timeslots/{timeslot_id}/book` - Book a time slot
 - `DELETE /api/timeslots/{timeslot_id}/book` - Unbook a time slot
 
 ### Admin
-- `GET /api/admin/timeslots` - Get all time slots (Admin)
-- `DELETE /api/timeslots/{timeslot_id}` - Delete a time slot (Admin)
+- `GET /api/admin/timeslots` - Get all time slots (Admin only)
+- `DELETE /api/timeslots/{timeslot_id}` - Delete a time slot (Admin only)
+- `POST /api/timeslots/{timeslot_id}/cancel` - Cancel a time slot (Admin only)
+- `POST /api/timeslots/{timeslot_id}/reschedule` - Reschedule a time slot (Admin only)
+- `POST /api/admin/create-sample-events` - Create sample events for the next 2 weeks (Admin only)
+
+### Notifications
+- `GET /api/notifications` - Get notifications for cancelled/rescheduled events (requires authentication)
 
 ## Troubleshooting
 
