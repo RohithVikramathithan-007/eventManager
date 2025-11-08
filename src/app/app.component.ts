@@ -33,7 +33,7 @@ export class AppComponent implements OnInit, OnDestroy {
     if (this.authService.isAuthenticated()) {
       this.authService.verifyToken();
       this.loadNotifications();
-      // Refresh notifications every 30 seconds
+      // Refresh notifications
       this.notificationSubscription = interval(30000).subscribe(() => {
         if (this.authService.isAuthenticated()) {
           this.loadNotifications();
@@ -43,9 +43,8 @@ export class AppComponent implements OnInit, OnDestroy {
 
     // Listen for notification update events
     window.addEventListener('notifications-update', () => {
-      console.log('Notification update event received'); // Debug log
+      console.log('Notification update event received');
       if (this.authService.isAuthenticated()) {
-        // Small delay to ensure backend has processed the change
         setTimeout(() => {
           this.loadNotifications();
         }, 500);

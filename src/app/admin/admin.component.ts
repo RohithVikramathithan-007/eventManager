@@ -62,7 +62,6 @@ export class AdminComponent implements OnInit {
       this.timeslotForm.reset();
       this.timeslotForm.patchValue({ capacity: 1, name: '' }); // Reset to default
     } else {
-      // Ensure capacity is set to 1 when opening form
       this.timeslotForm.patchValue({ capacity: 1, name: '' });
     }
   }

@@ -16,7 +16,6 @@ export class AuthGuard implements CanActivate {
     state: RouterStateSnapshot
   ): boolean {
     if (this.authService.isAuthenticated()) {
-      // Check if route requires admin
       if (route.data['requiresAdmin'] && !this.authService.isAdmin()) {
         this.router.navigate(['/calendar']);
         return false;

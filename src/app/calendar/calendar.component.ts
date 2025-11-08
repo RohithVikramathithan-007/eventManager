@@ -170,10 +170,10 @@ export class CalendarComponent implements OnInit {
     
     // Check if event has ended
     if (this.isEventEnded(timeslot)) {
-      return false; // Event has ended
+      return false;
     }
     
-    // Check if user already booked (only one signup per event per user)
+    // Check if user already booked
     if (this.isBookedByUser(timeslot)) {
       return false;
     }
@@ -208,7 +208,7 @@ export class CalendarComponent implements OnInit {
       const timeParts = timeslot.end_time.split(':');
       if (timeParts.length < 2) {
         console.warn('Invalid time format:', timeslot.end_time);
-        return false; // Don't mark as ended if we can't parse
+        return false;
       }
       
       const hours = parseInt(timeParts[0], 10);
@@ -220,25 +220,13 @@ export class CalendarComponent implements OnInit {
         return false;
       }
       
-      // Create date object in local timezone
       const eventEndDate = new Date(year, month - 1, day, hours, minutes || 0, 0, 0);
       const now = new Date();
-      
-      // Debug logging - check browser console to see what's happening
-      console.log('Event end check:', {
-        date: timeslot.date,
-        time: timeslot.end_time,
-        eventEndDate: eventEndDate.toString(),
-        eventEndDateISO: eventEndDate.toISOString(),
-        now: now.toString(),
-        nowISO: now.toISOString(),
-        isEnded: eventEndDate < now
-      });
       
       return eventEndDate < now;
     } catch (error) {
       console.error('Error checking if event ended:', error, timeslot);
-      return false; // Don't mark as ended if there's an error
+      return false;
     }
   }
 
@@ -279,7 +267,7 @@ export class CalendarComponent implements OnInit {
       next: () => {
         this.snackBar.open('Successfully booked timeslot!', 'Close', { duration: 3000 });
         this.loadTimeslots();
-        // Trigger notification refresh in parent component
+        // Trigger notification refresh
         window.dispatchEvent(new Event('notifications-update'));
       },
       error: (err) => {
@@ -300,7 +288,7 @@ export class CalendarComponent implements OnInit {
       next: () => {
         this.snackBar.open('Successfully unbooked timeslot!', 'Close', { duration: 3000 });
         this.loadTimeslots();
-        // Trigger notification refresh in parent component
+        // Trigger notification refresh
         window.dispatchEvent(new Event('notifications-update'));
       },
       error: (err) => {

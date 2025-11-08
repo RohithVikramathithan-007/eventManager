@@ -27,17 +27,12 @@ The database will also be automatically initialized when you first run `main.py`
 
 ## Database File
 
-The database file `event_manager.db` is created in the `backend/` directory. 
-
-**Note:** If you want to commit a pre-populated database to git, you can:
-1. Run `python init_db.py` to create the database
-2. Commit `event_manager.db` to your repository
-3. Users cloning the repo will have the default database ready
+The database file `event_manager.db` is ready to use in the `backend/` directory. 
 
 ## Troubleshooting
 
 If you get a 404 error on login:
-1. Make sure the database exists: `ls backend/event_manager.db` (or `dir backend\event_manager.db` on Windows)
+1. Make sure the database exists: `ls backend/event_manager.db`
 2. If it doesn't exist, run: `python init_db.py`
 3. Restart the server: `python main.py`
 

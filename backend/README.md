@@ -18,8 +18,6 @@ python init_db.py
    - **User**: `user1` / `password1`
    - **Admin**: `admin1` / `adminpassword1`
 
-   **Note:** The database will also auto-initialize when you first run `main.py`, but running `init_db.py` explicitly is recommended.
-
 ## Running
 
 ```bash
@@ -54,8 +52,8 @@ All API endpoints (except `/api/auth/login`) require authentication via JWT Bear
 The application uses SQLite database with the following tables:
 - `users` - User accounts with hashed passwords
 - `timeslots` - Event timeslots
-- `bookings` - User bookings (for future use)
-- `user_preferences` - User category preferences (for future use)
+- `bookings` - User bookings
+- `user_preferences` - User category preferences
 
 Passwords are hashed using bcrypt for security.
 

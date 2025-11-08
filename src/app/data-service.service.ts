@@ -63,7 +63,6 @@ export class DataServiceService {
     return headers;
   }
 
-  // User Preferences
   getUserPreferences(userId: string): Observable<UserPreferences> {
     return this.http.get<UserPreferences>(`${this.apiUrl}/users/${userId}/preferences`, {
       headers: this.getHeaders()
@@ -79,7 +78,6 @@ export class DataServiceService {
     });
   }
 
-  // Timeslots
   getTimeslots(startDate?: string, endDate?: string, category?: EventCategory): Observable<TimeSlot[]> {
     let params = new HttpParams();
     if (startDate) params = params.set('start_date', startDate);
@@ -116,7 +114,6 @@ export class DataServiceService {
     });
   }
 
-  // Admin
   getAllTimeslots(): Observable<TimeSlot[]> {
     return this.http.get<TimeSlot[]>(`${this.apiUrl}/admin/timeslots`, {
       headers: this.getHeaders()
@@ -152,7 +149,7 @@ export class DataServiceService {
     });
   }
 
-  // Admin - Create sample events
+  //Create sample events
   createSampleEvents(): Observable<any> {
     return this.http.post(`${this.apiUrl}/admin/create-sample-events`, {}, {
       headers: this.getHeaders()

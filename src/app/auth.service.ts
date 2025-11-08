@@ -24,7 +24,7 @@ export class AuthService {
   public currentUser$ = this.currentUserSubject.asObservable();
 
   constructor(private http: HttpClient) {
-    // Check if token is still valid on service initialization
+    // Check if token is valid
     const token = this.getToken();
     if (token) {
       this.verifyToken();

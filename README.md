@@ -5,7 +5,7 @@ A full-stack web application for booking events from pre-defined calendar slots.
 ## Features
 
 ### User Features
-- **User Preferences**: Select event categories of interest (Cat 1, Cat 2, Cat 3)
+- **User Preferences**: Select event categories of interest
 - **Calendar View**: 
   - Weekly calendar view with time slots
   - Navigate between weeks
@@ -21,18 +21,6 @@ A full-stack web application for booking events from pre-defined calendar slots.
   - See booking status for each time slot
   - Delete time slots
 
-## Technology Stack
-
-### Frontend
-- **Angular 15**: Frontend framework
-- **Angular Material**: UI component library
-- **TypeScript**: Programming language
-- **RxJS**: Reactive programming
-
-### Backend
-- **FastAPI**: Modern Python web framework
-- **Pydantic**: Data validation
-- **Uvicorn**: ASGI server
 
 ## Project Structure
 
@@ -69,22 +57,7 @@ eventManagerFrontend/
 cd backend
 ```
 
-2. Create a virtual environment (recommended):
-```bash
-python -m venv venv
-```
-
-3. Activate the virtual environment:
-   - **Windows**:
-     ```bash
-     venv\Scripts\activate
-     ```
-   - **macOS/Linux**:
-     ```bash
-     source venv/bin/activate
-     ```
-
-4. Install Python dependencies:
+2. Install Python dependencies:
 ```bash
 pip install -r requirements.txt
 ```
@@ -133,7 +106,6 @@ The frontend application will be available at `http://localhost:4200`
 1. **Start the Backend**:
    - Open a terminal
    - Navigate to the `backend` directory
-   - Activate the virtual environment (if using one)
    - Run `python main.py` or `uvicorn main:app --reload`
 
 2. **Start the Frontend**:
@@ -150,7 +122,7 @@ The frontend application will be available at `http://localhost:4200`
 
 1. **Set Preferences**:
    - Navigate to "Preferences" from the top navigation
-   - Select the event categories you're interested in (Cat 1, Cat 2, Cat 3)
+   - Select the event categories you're interested in
    - Click "Save Preferences"
 
 2. **View Calendar**:
@@ -207,32 +179,6 @@ The frontend application will be available at `http://localhost:4200`
 - `GET /api/admin/timeslots` - Get all time slots (Admin)
 - `DELETE /api/timeslots/{timeslot_id}` - Delete a time slot (Admin)
 
-## Development
-
-### Building for Production
-
-**Frontend**:
-```bash
-ng build --configuration production
-```
-The build artifacts will be stored in the `dist/` directory.
-
-**Backend**:
-The backend is ready for production deployment. For production, consider:
-- Using a production ASGI server like Gunicorn with Uvicorn workers
-- Setting up a proper database (PostgreSQL, MySQL, etc.)
-- Implementing authentication and authorization
-- Adding environment variables for configuration
-
-### Code Quality
-
-The codebase follows Angular and Python best practices:
-- TypeScript strict mode
-- Component-based architecture
-- Service-oriented design
-- RESTful API design
-- Pydantic models for data validation
-
 ## Troubleshooting
 
 ### Backend Issues
@@ -245,20 +191,6 @@ The codebase follows Angular and Python best practices:
 - **Module not found errors**: Run `npm install` again
 - **Angular Material not working**: Ensure you've run `ng add @angular/material`
 - **API connection errors**: Ensure the backend is running on `http://localhost:8000`
-
-## Future Enhancements
-
-- User authentication and authorization
-- Database persistence (currently using in-memory storage)
-- Email notifications for bookings
-- Recurring time slots
-- User profiles and history
-- Advanced filtering and search
-- Mobile-responsive improvements
-
-## License
-
-This project is provided as-is for demonstration purposes.
 
 ## Support
 
